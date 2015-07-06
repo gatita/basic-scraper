@@ -34,8 +34,19 @@ def get_inspection_page(**kwargs):
     return response.content, response.encoding
 
 
-def write_inspection_page():
-    pass
+def write_inspection_page(search_results):
+    with open('inspection_page.html', 'w') as page:
+        page.write(search_results[1] + search_results[0])
+
+
+def load_inspection_page(fh):
+    with open(fh, 'rb') as page:
+        encoding = page.readline()
+        content = page.readlines()
+    return content, encoding
+
+
+
 
 
 
