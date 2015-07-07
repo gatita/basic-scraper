@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import re
 import requests
 import sys
 from bs4 import BeautifulSoup
@@ -60,6 +61,11 @@ def parse_source(source_content, source_encoding):
     return soup
 
 
+def extract_data_listings(html):
+    id_finder = re.compile(r'PR[\d]+~')
+    return html.find_all('div', id=id_finder)
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         content, encoding = get_inspection_page(
@@ -71,8 +77,10 @@ if __name__ == '__main__':
         write_inspection_page(content)
 
     elif sys.argv[1] == 'test':
-        import pdb; pdb.set_trace()
         content = load_inspection_page('inspection_page.html')
 
     document = parse_source(content, 'utf-8')
-    print document.prettify(encoding='utf-8')
+    listings = extract_data_listings(document)
+    print len(listings)
+    print listings[0].prettify()
+
