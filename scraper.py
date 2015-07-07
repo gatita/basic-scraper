@@ -75,6 +75,10 @@ def has_two_tds(element):
     return verdict
 
 
+def clean_data(cell):
+    return cell.strip()
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         content, encoding = get_inspection_page(
@@ -90,11 +94,16 @@ if __name__ == '__main__':
 
     document = parse_source(content, 'utf-8')
     listings = extract_data_listings(document)
-    for listing in listings:
+
+    for listing in listings[:5]:
         metadata_rows = listing.find('tbody').find_all(
             has_two_tds, recursive=False
         )
-        print len(metadata_rows)
+        for row in metadata_rows:
+            for td in row.find_all('td', recursive=False):
+                print repr(clean_data(td.text)),
+            print
+        print
 
     # print len(listings)
     # print listings[0].prettify()
