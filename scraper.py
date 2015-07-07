@@ -66,6 +66,15 @@ def extract_data_listings(html):
     return html.find_all('div', id=id_finder)
 
 
+def has_two_tds(element):
+    verdict = False
+    if element.name == 'tr':
+        children = element.findChildren('td')
+        if len(children) == 2:
+            verdict = True
+    return verdict
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         content, encoding = get_inspection_page(
@@ -81,6 +90,11 @@ if __name__ == '__main__':
 
     document = parse_source(content, 'utf-8')
     listings = extract_data_listings(document)
-    print len(listings)
-    print listings[0].prettify()
+    for listing in listings:
+        metadata_rows = listing.find('tbody').find_all(
+            has_two_tds, recursive=False
+        )
+        print len(metadata_rows)
 
+    # print len(listings)
+    # print listings[0].prettify()
