@@ -135,9 +135,11 @@ if __name__ == '__main__':
     document = parse_source(content, 'utf-8')
     listings = extract_data_listings(document)
 
+    knitted = {}
     for listing in listings[:10]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
+        score_data.update(metadata)
         print score_data
 
     # print len(listings)
