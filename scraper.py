@@ -94,12 +94,24 @@ def extract_restaurant_metadata(listing):
     return rdata
 
 
+def is_inspection_row(element):
+    verdict = False
+    if element.name == 'tr':
+        children = element.findChildren('td')
+        if len(children) == 4:
+            firstchild = clean_data(children[0]).lower()
+            if ('inspection' in firstchild
+               and firstchild.split()[0] != 'inspection'):
+                verdict = True
+    return verdict
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         content, encoding = get_inspection_page(
-            Zip_Code='98115',
-            Inspection_Start='7/1/2015',
-            Inspection_End='7/6/2015'
+            Zip_Code='98112',
+            Inspection_Start='01/01/2015',
+            Inspection_End='07/01/2015'
         )
 
         write_inspection_page(content)
@@ -110,10 +122,11 @@ if __name__ == '__main__':
     document = parse_source(content, 'utf-8')
     listings = extract_data_listings(document)
 
-    for listing in listings[:5]:
+    for listing in listings[:10]:
         metadata = extract_restaurant_metadata(listing)
-        print metadata
-        print
+        inspection_rows = listing.find_all(is_inspection_row)
+        for row in inspection_rows:
+            print row.text
 
     # print len(listings)
     # print listings[0].prettify()
