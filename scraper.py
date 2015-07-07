@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import requests
+import sys
 from bs4 import BeautifulSoup
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
@@ -41,13 +44,31 @@ def write_inspection_page(search_results):
 
 def load_inspection_page(fh):
     with open(fh, 'rb') as page:
-        encoding = page.readline()
-        content = page.readlines()
-    return content, encoding
+        full = page.read().split('\r\n', 1)
+    return full[1], full[0]
 
 
+def parse_source(source_content, source_encoding):
+    soup = BeautifulSoup(
+        source_content,
+        'html5lib',
+        from_encoding=source_encoding
+    )
+
+    return soup
 
 
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        content, encoding = get_inspection_page(
+            Zip_Code='98115',
+            Inspection_Start='7/1/2015',
+            Inspection_End='7/6/2015'
+        )
 
+    elif sys.argv[1] == 'test':
+        import pdb; pdb.set_trace()
+        content, encoding = load_inspection_page('inspection_page.html')
 
-
+    document = parse_source(content, encoding)
+    print document.prettify(encoding=encoding)
