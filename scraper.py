@@ -76,7 +76,8 @@ def has_two_tds(element):
 
 
 def clean_data(cell):
-    return cell.strip()
+    cell = cell.text
+    return cell.strip(' \n:-')
 
 
 if __name__ == '__main__':
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         )
         for row in metadata_rows:
             for td in row.find_all('td', recursive=False):
-                print repr(clean_data(td.text)),
+                print repr(clean_data(td)),
             print
         print
 
