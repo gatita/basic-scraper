@@ -106,6 +106,19 @@ def is_inspection_row(element):
     return verdict
 
 
+def extract_score_data(listing):
+    score_info = {}
+    scores = []
+    inspection_rows = listing.find_all(is_inspection_row)
+    for row in inspection_rows:
+        td_children = row.find_all('td')
+        scores.append(int(td_children[2].text))
+    score_info['high_score'] = max(scores)
+    score_info['total'] = len(scores)
+    score_info['avg'] = (sum(scores) / float(len(scores)))
+    return score_info
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         content, encoding = get_inspection_page(
@@ -124,9 +137,8 @@ if __name__ == '__main__':
 
     for listing in listings[:10]:
         metadata = extract_restaurant_metadata(listing)
-        inspection_rows = listing.find_all(is_inspection_row)
-        for row in inspection_rows:
-            print row.text
+        score_data = extract_score_data(listing)
+        print score_data
 
     # print len(listings)
     # print listings[0].prettify()
