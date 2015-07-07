@@ -28,24 +28,26 @@ INSPECTION_PARAMS = {
 
 def get_inspection_page(**kwargs):
     inspection_params = INSPECTION_PARAMS.copy()
+
     for k, v in kwargs.iteritems():
         if k in INSPECTION_PARAMS:
             inspection_params[k] = v
+
     search = INSPECTION_DOMAIN + INSPECTION_PATH
     response = requests.get(search, params=inspection_params)
     response.raise_for_status()
+
     return response.content, response.encoding
 
 
 def write_inspection_page(search_results):
     with open('inspection_page.html', 'w') as page:
-        page.write(search_results[1] + search_results[0])
+        page.write(search_results)
 
 
-def load_inspection_page(fh):
-    with open(fh, 'rb') as page:
-        full = page.read().split('\r\n', 1)
-    return full[1], full[0]
+def load_inspection_page(filename):
+    with open(filename, 'r') as page:
+        return page.read()
 
 
 def parse_source(source_content, source_encoding):
@@ -66,9 +68,11 @@ if __name__ == '__main__':
             Inspection_End='7/6/2015'
         )
 
+        write_inspection_page(content)
+
     elif sys.argv[1] == 'test':
         import pdb; pdb.set_trace()
-        content, encoding = load_inspection_page('inspection_page.html')
+        content = load_inspection_page('inspection_page.html')
 
-    document = parse_source(content, encoding)
-    print document.prettify(encoding=encoding)
+    document = parse_source(content, 'utf-8')
+    print document.prettify(encoding='utf-8')
