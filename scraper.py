@@ -4,6 +4,7 @@ import re
 import requests
 import sys
 from bs4 import BeautifulSoup
+import geocoder
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
 INSPECTION_PATH = '/health/ehs/foodsafety/inspections/Results.aspx?'
@@ -146,11 +147,19 @@ def generate_results(test=False):
     document = parse_source(html, 'utf-8')
     listings = extract_data_listings(document)
 
-    for listing in listings[:10]:
+    for listing in listings[:5]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
         score_data.update(metadata)
         yield score_data
+
+
+def get_geojson(search_result):
+    address = str(search_result['Address'])
+    if not address:
+        return None
+    response = geocoder.google(address)
+    return response.geojson
 
 
 if __name__ == '__main__':
