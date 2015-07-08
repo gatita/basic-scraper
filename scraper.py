@@ -129,18 +129,17 @@ def extract_score_data(listing):
     return data
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        content, encoding = get_inspection_page(
-            Zip_Code='98112',
-            Inspection_Start='01/01/2015',
-            Inspection_End='07/01/2015'
-        )
+def generate_results(test=False):
+    kwargs = {
+        Zip_Code: '98112',
+        Inspection_Start: '01/01/2015',
+        Inspection_End: '07/01/2015'
+    }
 
-        write_inspection_page(content)
+    if test:
+        html = load_inspection_page('inspection_page.html')
 
-    elif sys.argv[1] == 'test':
-        content = load_inspection_page('inspection_page.html')
+    else:
 
     document = parse_source(content, 'utf-8')
     listings = extract_data_listings(document)
@@ -150,7 +149,10 @@ if __name__ == '__main__':
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
         score_data.update(metadata)
-        print score_data
+        yield score_data
 
-    # print len(listings)
-    # print listings[0].prettify()
+
+if __name__ == '__main__':
+    test = len(sys.argv_) > 1 and sys.argv[1] == 'test'
+    for result in generate_results(test):
+        print result
