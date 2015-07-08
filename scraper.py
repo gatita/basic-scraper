@@ -107,16 +107,26 @@ def is_inspection_row(element):
 
 
 def extract_score_data(listing):
-    score_info = {}
-    scores = []
     inspection_rows = listing.find_all(is_inspection_row)
+    samples = len(inspection_rows)
+    total = high_score = average = 0
     for row in inspection_rows:
-        td_children = row.find_all('td')
-        scores.append(int(td_children[2].text))
-    score_info['high_score'] = max(scores)
-    score_info['total'] = len(scores)
-    score_info['avg'] = (sum(scores) / float(len(scores)))
-    return score_info
+        strval = clean_data(row.find_all('td')[2])
+        try:
+            intval = int(strval)
+        except (ValueError, TypeError):
+            samples -= 1
+        else:
+            total += intval
+            high_score = intval if intval > high_score else high_score
+    if samples:
+        average = total/float(samples)
+    data = {
+        u'Average Score': average,
+        u'High Score': high_score,
+        u'Total Inspections': samples
+    }
+    return data
 
 
 if __name__ == '__main__':
