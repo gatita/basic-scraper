@@ -120,7 +120,7 @@ def extract_score_data(listing):
             total += intval
             high_score = intval if intval > high_score else high_score
     if samples:
-        average = total/float(samples)
+        average = total / float(samples)
     data = {
         u'Average Score': average,
         u'High Score': high_score,
@@ -131,20 +131,21 @@ def extract_score_data(listing):
 
 def generate_results(test=False):
     kwargs = {
-        Zip_Code: '98112',
-        Inspection_Start: '01/01/2015',
-        Inspection_End: '07/01/2015'
+        'Zip_Code': '98112',
+        'Inspection_Start': '01/01/2015',
+        'Inspection_End': '07/01/2015'
     }
 
     if test:
         html = load_inspection_page('inspection_page.html')
+        encoding = 'utf-8'
 
     else:
+        html, encoding = get_inspection_page(**kwargs)
 
-    document = parse_source(content, 'utf-8')
+    document = parse_source(html, 'utf-8')
     listings = extract_data_listings(document)
 
-    knitted = {}
     for listing in listings[:10]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
