@@ -6,6 +6,7 @@ import sys
 from bs4 import BeautifulSoup
 import geocoder
 from pprint import pprint
+import json
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
 INSPECTION_PATH = '/health/ehs/foodsafety/inspections/Results.aspx?'
@@ -159,12 +160,43 @@ def get_geojson(search_result):
     address = ' '.join(search_result.get('Address', ''))
     if not address:
         return None
+
     response = geocoder.google(address)
-    return response.geojson
+    geoj = response.geojson
+    desired_keys = (
+        'Business Name',
+        'Address',
+        'Average Score',
+        'High Score',
+        'Total Inspections',
+    )
+    inspection_data = {}
+
+    for key, val in search_result.items():
+        if key in desired_keys:
+            if isinstance(val, list):
+                val = ' '.join(val)
+
+            inspection_data[key] = val
+
+    new_addr = geoj['properties'].get('addresss')
+
+    if new_addr is not None:
+        inspection_data['Address'] = new_addr
+
+    geoj['properties'] = inspection_data
+
+    return geoj
 
 
 if __name__ == '__main__':
     test = len(sys.argv) > 1 and sys.argv[1] == 'test'
+    total_result = {'type': 'FeatureCollection', 'features': []}
+
     for result in generate_results(test=True):
-        geoj = get_geojson(result)
-        pprint(geoj)
+        geo_result = get_geojson(result)
+        pprint(geo_result)
+        total_result['features'].append(geo_result)
+
+    with open('my_map.json', 'w') as fh:
+        json.dump(total_result, fh)
