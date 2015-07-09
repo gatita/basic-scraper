@@ -155,7 +155,7 @@ def generate_results(test=False):
 
 
 def get_geojson(search_result):
-    address = str(search_result['Address'])
+    address = ' '.join(search_result.get('Address', ''))
     if not address:
         return None
     response = geocoder.google(address)
