@@ -5,6 +5,7 @@ import requests
 import sys
 from bs4 import BeautifulSoup
 import geocoder
+from pprint import pprint
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
 INSPECTION_PATH = '/health/ehs/foodsafety/inspections/Results.aspx?'
@@ -130,7 +131,7 @@ def extract_score_data(listing):
     return data
 
 
-def generate_results(test=False):
+def generate_results(test=False, count=10):
     kwargs = {
         'Zip_Code': '98112',
         'Inspection_Start': '01/01/2015',
@@ -147,7 +148,7 @@ def generate_results(test=False):
     document = parse_source(html, 'utf-8')
     listings = extract_data_listings(document)
 
-    for listing in listings[:5]:
+    for listing in listings[:count]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
         score_data.update(metadata)
@@ -163,6 +164,7 @@ def get_geojson(search_result):
 
 
 if __name__ == '__main__':
-    test = len(sys.argv_) > 1 and sys.argv[1] == 'test'
-    for result in generate_results(test):
-        print result
+    test = len(sys.argv) > 1 and sys.argv[1] == 'test'
+    for result in generate_results(test=True):
+        geoj = get_geojson(result)
+        pprint(geoj)
