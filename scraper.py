@@ -195,8 +195,11 @@ if __name__ == '__main__':
 
     for result in generate_results(test=True):
         geo_result = get_geojson(result)
-        pprint(geo_result)
         total_result['features'].append(geo_result)
+
+    pprint(sorted(total_result['features'],
+                  key=lambda v: v['properties']['Average Score'])
+           )
 
     with open('my_map.json', 'w') as fh:
         json.dump(total_result, fh)
