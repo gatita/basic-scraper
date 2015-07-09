@@ -4,6 +4,9 @@ import re
 import requests
 import sys
 from bs4 import BeautifulSoup
+import geocoder
+from pprint import pprint
+import json
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
 INSPECTION_PATH = '/health/ehs/foodsafety/inspections/Results.aspx?'
@@ -120,7 +123,7 @@ def extract_score_data(listing):
             total += intval
             high_score = intval if intval > high_score else high_score
     if samples:
-        average = total/float(samples)
+        average = total / float(samples)
     data = {
         u'Average Score': average,
         u'High Score': high_score,
@@ -129,28 +132,74 @@ def extract_score_data(listing):
     return data
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        content, encoding = get_inspection_page(
-            Zip_Code='98112',
-            Inspection_Start='01/01/2015',
-            Inspection_End='07/01/2015'
-        )
+def generate_results(test=False, count=10):
+    kwargs = {
+        'Zip_Code': '98112',
+        'Inspection_Start': '01/01/2015',
+        'Inspection_End': '07/01/2015'
+    }
 
-        write_inspection_page(content)
+    if test:
+        html = load_inspection_page('inspection_page.html')
+        encoding = 'utf-8'
 
-    elif sys.argv[1] == 'test':
-        content = load_inspection_page('inspection_page.html')
+    else:
+        html, encoding = get_inspection_page(**kwargs)
 
-    document = parse_source(content, 'utf-8')
+    document = parse_source(html, 'utf-8')
     listings = extract_data_listings(document)
 
-    knitted = {}
-    for listing in listings[:10]:
+    for listing in listings[:count]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
         score_data.update(metadata)
-        print score_data
+        yield score_data
 
-    # print len(listings)
-    # print listings[0].prettify()
+
+def get_geojson(search_result):
+    address = ' '.join(search_result.get('Address', ''))
+    if not address:
+        return None
+
+    response = geocoder.google(address)
+    geoj = response.geojson
+    desired_keys = (
+        'Business Name',
+        'Address',
+        'Average Score',
+        'High Score',
+        'Total Inspections',
+    )
+    inspection_data = {}
+
+    for key, val in search_result.items():
+        if key in desired_keys:
+            if isinstance(val, list):
+                val = ' '.join(val)
+
+            inspection_data[key] = val
+
+    new_addr = geoj['properties'].get('addresss')
+
+    if new_addr is not None:
+        inspection_data['Address'] = new_addr
+
+    geoj['properties'] = inspection_data
+
+    return geoj
+
+
+if __name__ == '__main__':
+    test = len(sys.argv) > 1 and sys.argv[1] == 'test'
+    total_result = {'type': 'FeatureCollection', 'features': []}
+
+    for result in generate_results(test=True):
+        geo_result = get_geojson(result)
+        total_result['features'].append(geo_result)
+
+    pprint(sorted(total_result['features'],
+                  key=lambda v: v['properties']['Average Score'])
+           )
+
+    with open('my_map.json', 'w') as fh:
+        json.dump(total_result, fh)
